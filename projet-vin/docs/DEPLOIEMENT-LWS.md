@@ -1,8 +1,9 @@
 # Deploiement automatique sur LWS / cPanel via FTPS
 
 Le SSH externe est bloque sur l'hebergement, donc le deploiement passe par FTPS.
-GitHub Actions construit l'application, envoie les fichiers sur cPanel, puis
-appelle une route protegee pour lancer les commandes Laravel.
+GitHub Actions construit l'application, cree une archive `deploy.zip`, l'envoie
+sur cPanel, puis appelle une route protegee pour extraire l'archive et lancer
+les commandes Laravel.
 
 ```text
 push sur main
@@ -10,8 +11,10 @@ push sur main
       -> deploy
          -> composer install --no-dev
          -> npm ci && npm run build
-         -> upload FTPS vers cPanel
+         -> creation de deploy.zip
+         -> upload FTPS de deploy.zip vers cPanel
          -> POST /deploy/run
+            -> extraction de deploy.zip
             -> optimize:clear
             -> migrate --force
             -> storage:link --force
@@ -19,7 +22,8 @@ push sur main
 ```
 
 Node et Composer ne sont pas necessaires sur l'hebergement : `vendor/` et
-`public/build/` sont construits par GitHub Actions puis envoyes par FTPS.
+`public/build/` sont construits par GitHub Actions puis envoyes dans l'archive.
+Cette methode evite l'envoi FTPS de milliers de petits fichiers.
 
 ## 1. Chemin serveur
 
@@ -125,7 +129,8 @@ Si ton compte FTP est deja limite au dossier `winestock`, mets simplement :
 3. Verifie que `LWS_DEPLOY_TOKEN` a exactement la meme valeur.
 4. Lance **Actions -> deploy -> Run workflow** dans GitHub.
 
-Le premier envoi peut etre long, car `vendor/` est transfere en entier.
+Le premier envoi doit rester raisonnable, car FTPS transfere une seule archive
+au lieu de milliers de petits fichiers.
 
 ## 5. Seed initial
 
@@ -146,6 +151,8 @@ le mot de passe par defaut.
 | --- | --- |
 | `530 Login authentication failed` | Mauvais utilisateur ou mot de passe FTP |
 | `FTPS connection failed` | Essaie `protocol: ftp` dans le workflow, ou verifie le mode FTPS chez LWS |
+| `PHP Zip extension is not enabled` | Active l'extension `zip` dans cPanel ou demande son activation au support |
+| `deploy.zip is missing` | L'upload FTPS n'a pas envoye l'archive au bon dossier |
 | `404` sur `/deploy/run` | `DEPLOY_TOKEN` absent du `.env`, ou different du secret GitHub |
 | `500` sur `/deploy/run` | Regarde `storage/logs/laravel.log` sur le serveur |
 | Styles absents | `public/build/` non envoye ou domaine mal pointe |

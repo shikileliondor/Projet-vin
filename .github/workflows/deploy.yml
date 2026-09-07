@@ -70,28 +70,22 @@ jobs:
           rm -rf .env public/hot node_modules tests docs .agents
           find storage -type f ! -name ".gitignore" -delete
           find storage -type d -empty -delete
+          mkdir -p ../deploy-payload
+          zip -qr ../deploy-payload/deploy.zip .
 
-      - name: Upload files with FTPS
+      - name: Upload deploy archive with FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
         with:
           server: ${{ secrets.LWS_FTP_SERVER }}
           username: ${{ secrets.LWS_FTP_USERNAME }}
           password: ${{ secrets.LWS_FTP_PASSWORD }}
           protocol: ftps
-          local-dir: projet-vin/
+          local-dir: deploy-payload/
           server-dir: ${{ secrets.LWS_FTP_DIR }}
+          state-name: .ftp-deploy-zip-state.json
           exclude: |
             **/.git*
             **/.git*/**
-            **/.github/**
-            **/.env
-            **/node_modules/**
-            **/tests/**
-            **/docs/**
-            **/.agents/**
-            **/storage/**
-            **/public/storage/**
-            **/bootstrap/cache/**
 
       - name: Run Laravel deploy commands
         env:

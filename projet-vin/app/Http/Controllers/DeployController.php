@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Throwable;
+use ZipArchive;
 
 class DeployController extends Controller
 {
@@ -31,16 +32,25 @@ class DeployController extends Controller
         $steps = [];
         $failed = false;
 
-        $this->ensureWritableDirectories();
+        $result = $this->extractDeployPackage();
+        $steps[] = $result;
 
-        foreach ($this->artisanCommands() as $step) {
-            $result = $this->runArtisan($step['command'], $step['options']);
-            $steps[] = $result;
+        if ($result['status'] !== 0) {
+            $failed = true;
+        }
 
-            if ($result['status'] !== 0 && ! $step['optional']) {
-                $failed = true;
+        if (! $failed) {
+            $this->ensureWritableDirectories();
 
-                break;
+            foreach ($this->artisanCommands() as $step) {
+                $result = $this->runArtisan($step['command'], $step['options']);
+                $steps[] = $result;
+
+                if ($result['status'] !== 0 && ! $step['optional']) {
+                    $failed = true;
+
+                    break;
+                }
             }
         }
 
@@ -55,6 +65,67 @@ class DeployController extends Controller
             'version' => $request->header('X-Deploy-Version'),
             'steps' => $steps,
         ], $failed ? 500 : 200);
+    }
+
+    /**
+     * @return array{command: string, status: int, output: string}
+     */
+    private function extractDeployPackage(): array
+    {
+        $packagePath = base_path('deploy.zip');
+        $extractPath = storage_path('app/deploy-extract');
+
+        if (! File::exists($packagePath)) {
+            return [
+                'command' => 'extract deploy.zip',
+                'status' => 1,
+                'output' => 'deploy.zip is missing.',
+            ];
+        }
+
+        if (! class_exists(ZipArchive::class)) {
+            return [
+                'command' => 'extract deploy.zip',
+                'status' => 1,
+                'output' => 'PHP Zip extension is not enabled.',
+            ];
+        }
+
+        try {
+            File::deleteDirectory($extractPath);
+            File::ensureDirectoryExists($extractPath);
+
+            $zip = new ZipArchive;
+            $opened = $zip->open($packagePath);
+
+            if ($opened !== true) {
+                return [
+                    'command' => 'extract deploy.zip',
+                    'status' => 1,
+                    'output' => 'Unable to open deploy.zip.',
+                ];
+            }
+
+            $zip->extractTo($extractPath);
+            $zip->close();
+
+            $this->removeProtectedPaths($extractPath);
+            File::copyDirectory($extractPath, base_path());
+            File::deleteDirectory($extractPath);
+            File::delete($packagePath);
+
+            return [
+                'command' => 'extract deploy.zip',
+                'status' => 0,
+                'output' => 'deploy.zip extracted.',
+            ];
+        } catch (Throwable $exception) {
+            return [
+                'command' => 'extract deploy.zip',
+                'status' => 1,
+                'output' => $exception->getMessage(),
+            ];
+        }
     }
 
     /**
@@ -110,5 +181,13 @@ class DeployController extends Controller
         foreach ($directories as $directory) {
             File::ensureDirectoryExists($directory);
         }
+    }
+
+    private function removeProtectedPaths(string $extractPath): void
+    {
+        File::delete($extractPath.'/.env');
+        File::deleteDirectory($extractPath.'/storage');
+        File::deleteDirectory($extractPath.'/bootstrap/cache');
+        File::deleteDirectory($extractPath.'/public/storage');
     }
 }
