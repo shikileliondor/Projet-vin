@@ -1,6 +1,5 @@
 import { Form, Head, Link, usePage } from '@inertiajs/react';
-import { ArrowDownToLine, ArrowUpFromLine, History } from 'lucide-react';
-import { PageHeader } from '@/components/page-header';
+import { ArrowDownToLine, ArrowUpFromLine, Search } from 'lucide-react';
 import { StockStatus } from '@/components/stock-status';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { index } from '@/routes/stock';
 import { create as createEntry } from '@/routes/stock/entries';
 import { create as createExit } from '@/routes/stock/exits';
-import { index as movementsIndex } from '@/routes/stock/movements';
 
 type StockProduct = {
     id: number;
@@ -34,12 +32,18 @@ export default function StockIndex({
     return (
         <>
             <Head title="Stock" />
-            <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
-                <PageHeader
-                    title="Stock"
-                    description={`${products.length} produit(s) affiché(s)`}
-                    actions={
-                        <>
+            <div className="flex flex-1 flex-col gap-5 p-4 md:p-6">
+                <div className="grid gap-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h1 className="text-2xl font-bold tracking-tight">
+                                Stock
+                            </h1>
+                            <p className="text-muted-foreground text-sm">
+                                {products.length} produit(s)
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 sm:flex">
                             {permissions?.recordEntries && (
                                 <Button asChild size="lg">
                                     <Link href={createEntry()}>
@@ -52,54 +56,48 @@ export default function StockIndex({
                                     <ArrowUpFromLine /> Sortie
                                 </Link>
                             </Button>
-                            {permissions?.viewMovements && (
-                                <Button asChild size="lg" variant="ghost">
-                                    <Link href={movementsIndex()}>
-                                        <History /> Historique
-                                    </Link>
-                                </Button>
-                            )}
-                        </>
-                    }
-                />
-                <Card className="py-4">
-                    <CardContent>
-                        <Form
-                            {...index.form()}
-                            className="grid gap-3 sm:grid-cols-[1fr_200px_auto]"
-                        >
+                        </div>
+                    </div>
+
+                    <Form
+                        {...index.form()}
+                        className="grid gap-2 sm:grid-cols-[1fr_180px_auto]"
+                    >
+                        <div className="relative">
+                            <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                             <Input
                                 name="search"
                                 defaultValue={filters.search}
-                                placeholder="Rechercher un produit"
-                                className="h-11"
+                                placeholder="Rechercher"
+                                className="h-12 pl-10"
                             />
-                            <select
-                                name="level"
-                                defaultValue={filters.level ?? ''}
-                                className="border-input bg-background h-11 rounded-md border px-3"
-                            >
-                                <option value="">Tous les stocks</option>
-                                <option value="low">Stocks faibles</option>
-                                <option value="out">Ruptures</option>
-                            </select>
-                            <Button
-                                type="submit"
-                                variant="outline"
-                                className="h-11"
-                            >
-                                Filtrer
-                            </Button>
-                        </Form>
-                    </CardContent>
-                </Card>
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                        </div>
+                        <select
+                            name="level"
+                            defaultValue={filters.level ?? ''}
+                            className="border-input bg-background h-12 rounded-md border px-3"
+                        >
+                            <option value="">Tous</option>
+                            <option value="low">Faible</option>
+                            <option value="out">Rupture</option>
+                        </select>
+                        <Button
+                            type="submit"
+                            variant="secondary"
+                            className="h-12"
+                        >
+                            OK
+                        </Button>
+                    </Form>
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                     {products.map((product) => (
-                        <Card key={product.id} className="py-5">
+                        <Card key={product.id} className="py-4">
                             <CardContent className="grid gap-4">
                                 <div className="flex items-start justify-between gap-3">
-                                    <div>
-                                        <h2 className="font-semibold">
+                                    <div className="min-w-0">
+                                        <h2 className="text-base font-semibold">
                                             {product.name}
                                         </h2>
                                         <p className="text-muted-foreground text-sm">
@@ -110,15 +108,21 @@ export default function StockIndex({
                                         status={product.stock_status}
                                     />
                                 </div>
-                                <div>
-                                    <p className="text-3xl font-bold">
-                                        {product.stock_quantity}
-                                    </p>
-                                    <p className="text-muted-foreground text-sm">
-                                        {product.stock_display} · minimum{' '}
-                                        {product.minimum_stock}
+
+                                <div className="flex items-end justify-between gap-3">
+                                    <div>
+                                        <p className="text-muted-foreground text-xs">
+                                            Quantité
+                                        </p>
+                                        <p className="text-5xl font-bold">
+                                            {product.stock_quantity}
+                                        </p>
+                                    </div>
+                                    <p className="text-muted-foreground pb-2 text-sm">
+                                        min. {product.minimum_stock}
                                     </p>
                                 </div>
+
                                 <div className="grid grid-cols-2 gap-2">
                                     {permissions?.recordEntries && (
                                         <Button asChild>
@@ -147,6 +151,7 @@ export default function StockIndex({
                         </Card>
                     ))}
                 </div>
+
                 {products.length === 0 && (
                     <p className="text-muted-foreground rounded-lg border py-12 text-center">
                         Aucun produit trouvé.
