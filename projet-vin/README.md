@@ -30,10 +30,14 @@ npm run build
 
 ## Déploiement LWS
 
+Le déploiement est automatique : un push sur `main` lance les vérifications puis,
+si elles passent, compile l'application, l'envoie en FTPS et joue les migrations.
+La procédure d'installation complète est décrite dans
+[docs/DEPLOIEMENT-LWS.md](docs/DEPLOIEMENT-LWS.md).
+
 - Pointer le domaine vers le dossier `public` de Laravel.
 - Utiliser MySQL et PHP 8.3 ou supérieur.
-- Exécuter `php artisan migrate --force` après chaque livraison contenant des migrations.
-- Compiler les assets avant la livraison si Node.js n'est pas disponible sur l'hébergement.
+- `vendor` et `public/build` sont construits par GitHub Actions : ni Composer ni Node.js ne sont requis sur l'hébergement.
 - Conserver `QUEUE_CONNECTION=sync` : aucun worker permanent n'est requis.
 - Donner les droits d'écriture nécessaires à `storage` et `bootstrap/cache`.
 
