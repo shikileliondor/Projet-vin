@@ -52,7 +52,7 @@ export default function Login({
             <Head title="Connexion" />
             <main className="flex w-full flex-col items-center gap-8 text-stone-900">
                 <header className="flex flex-col items-center gap-3 text-center">
-                    <div className="flex size-14 items-center justify-center rounded-2xl border border-amber-200 bg-white text-amber-700 shadow-sm">
+                    <div className="flex size-14 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-900 shadow-sm">
                         <Wine className="size-7" strokeWidth={1.8} />
                     </div>
                     <div className="grid gap-1">
@@ -84,13 +84,13 @@ export default function Login({
                                 key={position}
                                 className={`size-3 rounded-full border transition-colors ${
                                     position < pin.length
-                                        ? 'border-amber-500 bg-amber-500'
+                                        ? 'border-stone-900 bg-stone-900'
                                         : 'border-stone-300 bg-white'
                                 }`}
                             />
                         ))}
                         {processing && (
-                            <Spinner className="ml-1 text-amber-600" />
+                            <Spinner className="ml-1 text-stone-700" />
                         )}
                     </div>
 
@@ -163,7 +163,7 @@ function PinButton({
             className={`flex h-14 items-center justify-center rounded-xl border text-lg font-semibold shadow-sm transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-35 ${
                 muted
                     ? 'border-stone-200 bg-white text-stone-400 hover:bg-stone-50'
-                    : 'border-stone-200 bg-white text-stone-950 hover:border-amber-300 hover:bg-amber-50'
+                    : 'border-stone-200 bg-white text-stone-950 hover:border-stone-300 hover:bg-stone-50'
             }`}
         >
             {label}
