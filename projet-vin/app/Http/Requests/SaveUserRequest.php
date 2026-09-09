@@ -24,6 +24,7 @@ class SaveUserRequest extends FormRequest
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($this->route('user'))],
             'role' => ['required', Rule::enum(UserRole::class)],
             'pin' => [Rule::requiredIf($this->route('user') === null), 'nullable', 'digits:4'],
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'is_active' => ['sometimes', 'boolean'],
         ];
     }

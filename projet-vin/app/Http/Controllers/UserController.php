@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\UserRole;
 use App\Http\Requests\SaveUserRequest;
 use App\Models\User;
+use App\Support\RolePermissions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -37,9 +38,10 @@ class UserController extends Controller
     public function store(SaveUserRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $data['password'] = Str::password(32);
+        $data['password'] = filled($data['password'] ?? null) ? $data['password'] : Str::password(32);
         $data['email_verified_at'] = now();
-        User::create($data);
+        $user = User::create($data);
+        RolePermissions::syncUserRole($user);
 
         return back()->with('success', 'Utilisateur ajouté.');
     }
@@ -64,7 +66,12 @@ class UserController extends Controller
             unset($data['pin']);
         }
 
+        if (empty($data['password'])) {
+            unset($data['password'], $data['password_confirmation']);
+        }
+
         $user->update($data);
+        RolePermissions::syncUserRole($user);
 
         return back()->with('success', 'Utilisateur modifié.');
     }

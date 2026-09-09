@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import PasswordInput from '@/components/password-input';
 import { index, store, update } from '@/routes/users';
 
 type AppUser = {
@@ -42,7 +43,7 @@ export default function UsersIndex({
                         <Form
                             {...store.form()}
                             resetOnSuccess
-                            className="grid gap-4 md:grid-cols-2 xl:grid-cols-5"
+                            className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"
                         >
                             {({ errors, processing }) => (
                                 <>
@@ -91,6 +92,28 @@ export default function UsersIndex({
                                             pattern="[0-9]{4}"
                                             maxLength={4}
                                             required
+                                            className="h-11"
+                                        />
+                                    </Field>
+                                    <Field
+                                        label="Mot de passe"
+                                        error={errors.password}
+                                    >
+                                        <PasswordInput
+                                            name="password"
+                                            autoComplete="new-password"
+                                            minLength={8}
+                                            className="h-11"
+                                        />
+                                    </Field>
+                                    <Field
+                                        label="Confirmation"
+                                        error={errors.password_confirmation}
+                                    >
+                                        <PasswordInput
+                                            name="password_confirmation"
+                                            autoComplete="new-password"
+                                            minLength={8}
                                             className="h-11"
                                         />
                                     </Field>
@@ -184,6 +207,26 @@ export default function UsersIndex({
                                                     pattern="[0-9]{4}"
                                                     maxLength={4}
                                                     placeholder="••••"
+                                                />
+                                            </Field>
+                                            <Field
+                                                label="Nouveau mot de passe"
+                                                error={errors.password}
+                                            >
+                                                <PasswordInput
+                                                    name="password"
+                                                    autoComplete="new-password"
+                                                    minLength={8}
+                                                />
+                                            </Field>
+                                            <Field
+                                                label="Confirmation"
+                                                error={errors.password_confirmation}
+                                            >
+                                                <PasswordInput
+                                                    name="password_confirmation"
+                                                    autoComplete="new-password"
+                                                    minLength={8}
                                                 />
                                             </Field>
                                             <label className="flex items-center gap-3">
